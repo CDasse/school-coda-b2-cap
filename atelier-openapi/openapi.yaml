@@ -220,11 +220,6 @@ paths:
 
   # ---- Découverte (public) -------------------------------------------------
 
-  # GET /cities
-  #   Rechercher une ville desservie, par filtre textuel.
-  #   Chaque ville du réseau possède une catapulte unique en son centre.
-  #   Opération PUBLIQUE : on cherche sans être connecté.
-
   /cities:
     get:
       tags: [Découverte]
@@ -270,12 +265,41 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
 
 
+  /trips/search:
+    post:
+      tags: [ Découverte ]
+      operationId: tripsSearch
+      summary: Rechercher un lancer
+      description: |
+        Rechercher les lancers reliant deux villes à une date donnée, pour un
+        nombre de places. Tous les lancers sont directs : aucune correspondance,
+        aucun itinéraire composé. Sans lancer direct ce jour-là, la liste est vide.
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripSearchRequest'
+      responses:
+        '200':
+          description: Lancers correspondant à la recherche. Tableau vide si aucune
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripSummary'
+              example:
+                - id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                  departure: Dijon
+                  arrival: Paris
+                  departureTime: 2027-02-14T10:03:00Z
+                  duration: 45
+                  price: 75
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
-  # POST /trips/search
-  #   Rechercher les lancers reliant deux villes à une date donnée, pour un
-  #   nombre de places. Tous les lancers sont directs : aucune correspondance,
-  #   aucun itinéraire composé. Sans lancer direct ce jour-là, la liste est vide.
-  #   Opération PUBLIQUE.
 
   # GET /trips/{id}
   #   Consulter le détail d'un lancer. Le détail porte ce qu'une liste de
@@ -538,13 +562,10 @@ components:
     #    - Une valeur n'a-t-elle qu'un jeu de possibilités connu d'avance ?
     # ==========================================================================
 
-    # City
-    #   Une ville desservie. Chaque ville possède une catapulte unique en son
-    #   centre, qui sert à la fois de point de lancement et de réception.
-
     City:
       type: object
-      description: Une ville desservie. Chaque ville possède une catapulte unique en son
+      description: |
+        Une ville desservie. Chaque ville possède une catapulte unique en son
         centre, qui sert à la fois de point de lancement et de réception.
       required: [id, name]
       properties:
@@ -556,9 +577,65 @@ components:
           type: string
           example: Dijon
 
+    TripSearchRequest:
+      type: object
+      description: |
+        Une recherche de trajet se réalise via une ville de départ,
+        une ville d'arrivée, une date et un nombre de passagers.
+      required: [departureId, arrivalId, date, passengers]
+      properties:
+        departureId:
+          type: string
+          format: uuid
+          example: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+        arrivalId:
+          type: string
+          format: uuid
+          example: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a4c5d
+        date:
+          type: string
+          format: date
+          example: '2027-02-14'
+        passengers:
+          type: integer
+          minimum: 1
+          example: 2
+
     # TripSummary
     #   Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
     #   choisir, pas de quoi préparer son voyage.
+
+    TripSummary:
+      type: object
+      description: |
+        Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
+        choisir, pas de quoi préparer son voyage.
+        
+        La durée du lancer est en minutes et le prix est en euros par place.
+      required: [ id, departureName, arrivalName, departureTime, duration, price ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        departureName:
+          type: string
+          example: Dijon
+        arrivalName:
+          type: string
+          example: Paris
+        departureTime:
+          type: string
+          format: date-time
+          example: '2027-02-14T10:03:00Z'
+        duration:
+          type: integer
+          description: Durée du lancer en minutes.
+          example: 45
+        price:
+          type: number
+          description: Prix en euros par place.
+          example: 75.00
 
     # TripDetail
     #   Le même lancer, consulté seul. Il ajoute ce dont on a besoin une fois

@@ -5,7 +5,14 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/cities"
+  url: "{{baseUrl}}/cities?q=dij&limit=5"
+  params:
+    - name: q
+      value: dij
+      type: query
+    - name: limit
+      value: "5"
+      type: query
   auth: inherit
 
 settings:
