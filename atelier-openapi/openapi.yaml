@@ -225,6 +225,52 @@ paths:
   #   Chaque ville du réseau possède une catapulte unique en son centre.
   #   Opération PUBLIQUE : on cherche sans être connecté.
 
+  /cities:
+    get:
+      tags: [Découverte]
+      operationId: listCities
+      summary: Rechercher une ville desservie.
+      description: |
+        Filtre les villes desservies sur leur nom, à mesure de la saisie lors de la
+        recherche d'un lancer.
+        La recherche accepte un texte partiel et un nombre maximum de résultats.
+        
+        Chaque ville du réseau possède une catapulte unique en son centre. Une ville 
+        porte un identifiant et un nom.
+      security: []
+      parameters:
+        - name: q
+          description: Le texte partiel ou non entré par l'utilisateur
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          description: Nombre maximum de résultats retournés.
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Villes correspondant au filtre. Tableau vide si aucune.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+              example:
+                - id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                  name: Dijon
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+
+
   # POST /trips/search
   #   Rechercher les lancers reliant deux villes à une date donnée, pour un
   #   nombre de places. Tous les lancers sont directs : aucune correspondance,
@@ -495,6 +541,20 @@ components:
     # City
     #   Une ville desservie. Chaque ville possède une catapulte unique en son
     #   centre, qui sert à la fois de point de lancement et de réception.
+
+    City:
+      type: object
+      description: Une ville desservie. Chaque ville possède une catapulte unique en son
+        centre, qui sert à la fois de point de lancement et de réception.
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        name:
+          type: string
+          example: Dijon
 
     # TripSummary
     #   Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
