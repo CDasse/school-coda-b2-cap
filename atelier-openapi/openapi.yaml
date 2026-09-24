@@ -466,11 +466,55 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
-
-
   # DELETE /carts/{id}/items/{itemId}
   #   Retirer une ligne du panier. Si c'était la dernière, le panier disparaît
   #   côté serveur — le voyageur n'a rien à faire de plus.
+
+  /carts/{id}/items/{itemId}:
+    delete:
+      tags: [ Panier ]
+      operationId: deleteCartItem
+      summary: Retirer un lancer du panier.
+      description: |
+        Retirer une ligne du panier.
+        
+        Si c'était la dernière, le panier disparaît côté serveur 
+        — le voyageur n'a rien à faire de plus.
+      parameters:
+        - name: id
+          description: L'id du panier (uuid)
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        - name: itemId
+          description: L'id de l'item (uuid)
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: Lancer retiré. Le panier mis à jour est retourné.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+              example:
+                id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                status: pending
+                content: [ ]
+                totalPrice: 0
+                createdDate: "2027-02-14T10:03:00Z"
+        '204':
+          description: Lancer retiré du panier. Etant le dernier lancer du panier, ce dernier a été supprimé.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   # POST /carts/{id}/pay
   #   Payer le panier : il passe de `pending` à `paid` et les billets sont
