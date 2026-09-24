@@ -1,11 +1,22 @@
 info:
   name: Ajouter un lancer au panier
   type: http
-  seq: 9
+  seq: 10
 
 http:
   method: POST
-  url: "{{baseUrl}}/carts/{id}/items"
+  url: "{{baseUrl}}/carts/:id/items"
+  params:
+    - name: id
+      value: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "tripId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "passengers": 2
+      }
   auth: inherit
 
 settings:

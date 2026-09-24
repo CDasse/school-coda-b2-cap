@@ -513,12 +513,6 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
-  # POST /carts/{id}/pay
-  #   Payer le panier : il passe de `pending` à `paid` et les billets sont
-  #   émis, un par place réservée. Aucune donnée bancaire ne circule : on
-  #   déclare un moyen de paiement, rien de plus.
-  #   L'écran de confirmation doit pouvoir se peindre à partir de cette seule
-  #   réponse. Que se passe-t-il si le panier est déjà payé ?
 
   /carts/{id}/pay:
     post:
@@ -588,10 +582,46 @@ paths:
 
   # ---- Billets (authentifié) -----------------------------------------------
 
-  # GET /tickets
-  #   Lister les billets du voyageur connecté. Un billet est un droit à
-  #   embarquer sur un lancer : il n'est pas nominatif, il vaut pour une
-  #   place et non pour une personne désignée.
+  /tickets:
+    get:
+      tags: [ Compte ]
+      operationId: getTickets
+      summary: Récupérer les tickets de l'utilisateur.
+      description: |
+        Lister les billets du voyageur connecté. Un billet est un droit à
+        embarquer sur un lancer : il n'est pas nominatif, il vaut pour une
+        place et non pour une personne désignée.
+      responses:
+        '200':
+          description: Tickets de l'utilisateur. Tableau vide si aucun ticket.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+              example:
+                - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c4m
+                  reference: ONTB-7K2M-4831
+                  trip:
+                    id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                    departureName: Dijon
+                    arrivalName: Paris
+                    departureTime: '2027-02-14T10:03:00Z'
+                    duration: 45
+                    price: 75.00
+                  createdDate: '2027-02-14T10:03:00Z'
+                - id: 2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e
+                  reference: ONTB-7K2M-4832
+                  trip:
+                    id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                    departureName: Dijon
+                    arrivalName: Paris
+                    departureTime: '2027-02-14T10:03:00Z'
+                    duration: 45
+                    price: 75.00
+                  createdDate: '2027-02-14T10:03:00Z'
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
 components:
   # ==========================================================================
@@ -995,13 +1025,13 @@ components:
 
     PayCartRequest:
       type: object
-      description: Informations de payement.
+      description: Informations de paiement.
       required: [ paymentMethod ]
       properties:
         paymentMethod:
           type: string
           enum: [card, voucher]
-          description: "Moyen de payement du panier : carte bancaire ou bon de transport de l'Office"
+          description: "Moyen de paiement du panier : carte bancaire ou bon de transport de l'Office"
           example: card
 
     Ticket:
@@ -1056,7 +1086,7 @@ components:
         createdDate:
           type: string
           format: date-time
-          description: Date et heure de création du ticket.
+          description: Date et heure du paiement.
           example: '2027-02-14T10:03:00Z'
         totalPrice:
           type: number

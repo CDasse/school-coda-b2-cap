@@ -1,11 +1,11 @@
 info:
-  name: Obtenir un panier
+  name: Liste des tickets
   type: http
-  seq: 9
+  seq: 13
 
 http:
   method: GET
-  url: "{{baseUrl}}/carts"
+  url: "{{baseUrl}}/tickets"
   auth: inherit
 
 settings:
