@@ -83,3 +83,11 @@ Vous pouvez importer `openapi.yaml` dans Bruno pour générer votre collection :
 requêtes viennent de votre propre contrat.
 
 N'écrivez pas les douze opérations avant de tester la première.
+
+
+## Usage de l'IA
+Pour ce projet, j'ai utilisé l'IA principalement comme outil de vérification et de relecture. 
+J'ai d'abord rédigé la spécification OpenAPI de mon côté (route par route). Ensuite, j'ai comparé
+ma version avec celle de l'IA pour repérer d'éventuels écarts et affiner mon code. Enfin, nous avons 
+fait une dernière repasse ensemble pour m'assurer que tout respectait bien le barème et qu'aucune 
+coquille ne traînait.

@@ -1,5 +1,5 @@
 info:
-  name: Recherche ville
+  name: Rechercher une ville desservie
   type: http
   seq: 5
 
@@ -13,7 +13,6 @@ http:
     - name: limit
       value: "5"
       type: query
-  auth: inherit
 
 settings:
   encodeUrl: true

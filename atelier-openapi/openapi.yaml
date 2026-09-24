@@ -294,7 +294,7 @@ paths:
                 - id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
                   departureName: Dijon
                   arrivalName: Paris
-                  departureTime: 2027-02-14T10:03:00Z
+                  departureTime: "2027-02-14T10:03:00Z"
                   duration: 45
                   price: 75
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -538,14 +538,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PayCartRequest'
+              $ref: '#/components/schemas/PayRequest'
       responses:
         '200':
           description: Panier payé avec succès. Retourne les détails du panier et la liste des billets émis.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConfirmationPay'
+                $ref: '#/components/schemas/PayResponse'
               example:
                 id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
                 tickets:
@@ -1023,7 +1023,7 @@ components:
           description: Nombre de passagers.
           example: 2
 
-    PayCartRequest:
+    PayRequest:
       type: object
       description: Informations de paiement.
       required: [ paymentMethod ]
@@ -1057,7 +1057,7 @@ components:
           description: Date et heure de création du ticket.
           example: '2027-02-14T10:03:00Z'
 
-    ConfirmationPay:
+    PayResponse:
       type: object
       description: |
         Confirmation d'achat du panier, regroupant les informations de paiement et les billets.
