@@ -1,0 +1,20 @@
+info:
+  name: Payer un panier
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: "{{baseUrl}}/carts/:id/pay"
+  params:
+    - name: id
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

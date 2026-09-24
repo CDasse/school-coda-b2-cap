@@ -466,9 +466,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
-  # DELETE /carts/{id}/items/{itemId}
-  #   Retirer une ligne du panier. Si c'était la dernière, le panier disparaît
-  #   côté serveur — le voyageur n'a rien à faire de plus.
 
   /carts/{id}/items/{itemId}:
     delete:
@@ -522,6 +519,72 @@ paths:
   #   déclare un moyen de paiement, rien de plus.
   #   L'écran de confirmation doit pouvoir se peindre à partir de cette seule
   #   réponse. Que se passe-t-il si le panier est déjà payé ?
+
+  /carts/{id}/pay:
+    post:
+      tags: [ Panier ]
+      operationId: payCart
+      summary: Payer le panier
+      description: |
+        Payer le panier : il passe de `pending` à `paid` et les billets sont
+        émis, un par place réservée.
+        
+        Aucune donnée bancaire ne circule : on déclare un moyen de paiement, rien de plus.
+      parameters:
+        - name: id
+          description: L'id du panier (uuid)
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCartRequest'
+      responses:
+        '200':
+          description: Panier payé avec succès. Retourne les détails du panier et la liste des billets émis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmationPay'
+              example:
+                id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                tickets:
+                  - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c4m
+                    reference: ONTB-7K2M-4831
+                    trip:
+                      id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                      departureName: Dijon
+                      arrivalName: Paris
+                      departureTime: '2027-02-14T10:03:00Z'
+                      duration: 45
+                      price: 75.00
+                    createdDate: '2027-02-14T10:03:00Z'
+                nbTickets: 2
+                paymentMethod: card
+                createdDate: '2027-02-14T10:03:00Z'
+                totalPrice: 24.00
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Le panier a déjà été payé.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: 'https://api.catapulte-connect.ontb.example/errors/cart-already-paid'
+                title: Panier déjà payé
+                status: 409
+                detail: Ce panier a déjà été réglé.
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   # ---- Billets (authentifié) -----------------------------------------------
 
@@ -930,5 +993,72 @@ components:
           description: Nombre de passagers.
           example: 2
 
-    # Ticket
-    #   Un droit à embarquer sur un lancer, émis au paiement. Un par place.
+    PayCartRequest:
+      type: object
+      description: Informations de payement.
+      required: [ paymentMethod ]
+      properties:
+        paymentMethod:
+          type: string
+          enum: [card, voucher]
+          description: "Moyen de payement du panier : carte bancaire ou bon de transport de l'Office"
+          example: card
+
+    Ticket:
+      type: object
+      description: |
+        Un droit à embarquer sur un lancer, émis au paiement. Un par place.
+      required: [ id, reference, trip, createdDate ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id du ticket.
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        reference:
+          type: string
+          description: Référence unique du ticket.
+          example: ONTB-7K2M-4831
+        trip:
+          $ref: '#/components/schemas/TripSummary'
+        createdDate:
+          type: string
+          format: date-time
+          description: Date et heure de création du ticket.
+          example: '2027-02-14T10:03:00Z'
+
+    ConfirmationPay:
+      type: object
+      description: |
+        Confirmation d'achat du panier, regroupant les informations de paiement et les billets.
+      required: [ id, tickets, nbTickets, paymentMethod, createdDate, totalPrice ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id de la confirmation d'achat.
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        tickets:
+          type: array
+          description: Tickets édités par la confirmation d'achat.
+          items:
+            $ref: '#/components/schemas/Ticket'
+        nbTickets:
+          type: integer
+          description: Nombre de tickets édités.
+          minimum: 1
+          example: 2
+        paymentMethod:
+          type: string
+          enum: [ card, voucher ]
+          description: "Moyen de paiement du panier : carte bancaire ou bon de transport de l'Office"
+          example: card
+        createdDate:
+          type: string
+          format: date-time
+          description: Date et heure de création du ticket.
+          example: '2027-02-14T10:03:00Z'
+        totalPrice:
+          type: number
+          description: Prix total de l'achat.
+          example: 24.00
