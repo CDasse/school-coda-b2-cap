@@ -292,8 +292,8 @@ paths:
                   $ref: '#/components/schemas/TripSummary'
               example:
                 - id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
-                  departure: Dijon
-                  arrival: Paris
+                  departureName: Dijon
+                  arrivalName: Paris
                   departureTime: 2027-02-14T10:03:00Z
                   duration: 45
                   price: 75
@@ -301,10 +301,47 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
 
 
-  # GET /trips/{id}
-  #   Consulter le détail d'un lancer. Le détail porte ce qu'une liste de
-  #   résultats n'a aucune raison de transporter pour chacune de ses lignes.
-  #   Opération PUBLIQUE.
+  /trips/{id}:
+    get:
+      tags: [ Découverte ]
+      operationId: tripDetails
+      summary: Détail d'un lancer
+      description: |
+        Consulter le détail d'un lancer, incluant la franchise de masse,
+        le modèle de catapulte et les consignes d'embarquement.
+        
+        Le détail porte ce qu'une liste de résultats n'a aucune raison de 
+        transporter pour chacune de ses lignes.
+      security: [ ]
+      parameters:
+        - name: id
+          description: L'id du lancer (uuid)
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      responses:
+        '200':
+          description: Détail du lancer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripDetail'
+              example:
+                id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                departureName: Dijon
+                arrivalName: Paris
+                departureTime: "2027-02-14T10:03:00Z"
+                duration: 45
+                price: 75
+                maxBaggageWeightKg: 12
+                catapultModel: "Onagre M3"
+                boardingInstruction: "Présentez-vous à la catapulte municipale de Dijon vingt minutes avant l'heure du lancer."
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
 
   # ---- Panier (authentifié) ------------------------------------------------
 
@@ -601,10 +638,6 @@ components:
           minimum: 1
           example: 2
 
-    # TripSummary
-    #   Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
-    #   choisir, pas de quoi préparer son voyage.
-
     TripSummary:
       type: object
       description: |
@@ -637,10 +670,27 @@ components:
           description: Prix en euros par place.
           example: 75.00
 
-    # TripDetail
-    #   Le même lancer, consulté seul. Il ajoute ce dont on a besoin une fois
-    #   qu'on l'a choisi — notamment la franchise de masse, qui n'est pas ici
-    #   une limite commerciale mais balistique.
+    TripDetail:
+      type: object
+      description: |
+        Le même lancer, consulté seul. Il ajoute ce dont on a besoin une fois
+        qu'on l'a choisi — notamment la franchise de masse, qui n'est pas ici
+        une limite commerciale mais balistique.
+      allOf:
+        - $ref: '#/components/schemas/TripSummary'
+        - type: object
+          required: [maxBaggageWeightKg, catapultModel, boardingInstruction]
+          properties:
+            maxBaggageWeightKg:
+              type: number
+              description: Poids maximum des bagages pour la catapulte.
+              example: 58.5
+            catapultModel:
+              type: string
+              example: "Onagre M3"
+            boardingInstruction:
+              type: string
+              example: "Présentez-vous à la catapulte municipale de Dijon vingt minutes avant l'heure du lancer."
 
     # Cart
     #   Un panier de réservation. Il connaît son état, ses lignes, et son total.
