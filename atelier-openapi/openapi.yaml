@@ -345,9 +345,39 @@ paths:
 
   # ---- Panier (authentifié) ------------------------------------------------
 
-  # POST /carts
-  #   Ouvrir un panier vide. C'est ici que la connexion devient nécessaire :
-  #   la découverte est libre, la réservation est nominative.
+  /carts:
+    post:
+      tags: [ Panier ]
+      operationId: createCart
+      summary: Ouvrir un panier vide
+      description: |
+        Crée un panier vide, au statut en attente. Un voyageur n'a qu'un seul panier actif à la fois.
+      responses:
+        '201':
+          description: Panier vide créé.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Cart'
+              example:
+                id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                status: pending
+                content: []
+                totalPrice: 0
+                createdDate: "2027-02-14T10:03:00Z"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: Un panier actif existe déjà pour cet utilisateur.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: 'https://api.catapulte-connect.ontb.example/errors/active-cart-exists'
+                title: Panier déjà actif
+                status: 409
+                detail: Un panier actif existe déjà. Un utilisateur ne peut posséder q'un seul panier.
+
 
   # GET /carts
   #   Récupérer le panier actif du voyageur connecté. Un voyageur n'a qu'un
@@ -683,7 +713,7 @@ components:
           properties:
             maxBaggageWeightKg:
               type: number
-              description: Poids maximum des bagages pour la catapulte.
+              description: Poids maximum des bagages pour la catapulte en kilogrammes.
               example: 58.5
             catapultModel:
               type: string
@@ -692,11 +722,53 @@ components:
               type: string
               example: "Présentez-vous à la catapulte municipale de Dijon vingt minutes avant l'heure du lancer."
 
-    # Cart
-    #   Un panier de réservation. Il connaît son état, ses lignes, et son total.
+    Cart:
+      type: object
+      description: |
+        Un panier de réservation. Il connaît son état, ses lignes, et son total.
+        
+        Un panier peut être en status "pending" ou "paid".
+      required: [ id, status, content, totalPrice, createdDate ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        status:
+          type: string
+          enum: [pending, paid]
+          example: pending
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalPrice:
+          type: number
+          example: 0.00
+        createdDate:
+          type: string
+          format: date-time
+          example: '2027-02-14T10:03:00Z'
 
-    # CartItem
-    #   Une ligne de panier : un lancer et un nombre de places.
+    CartItem:
+      type: object
+      description: |
+        Une ligne de panier : un lancer et un nombre de places.
+      required: [ id, trip, passengers, price ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        trip:
+          $ref: '#/components/schemas/TripSummary'
+        passengers:
+          type: integer
+          minimum: 1
+          example: 2
+        price:
+          type: number
+          example: 12.00
 
     # Ticket
     #   Un droit à embarquer sur un lancer, émis au paiement. Un par place.
