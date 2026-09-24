@@ -1,0 +1,16 @@
+info:
+  name: Ajouter un lancer au panier
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{baseUrl}}/carts/{id}/items"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

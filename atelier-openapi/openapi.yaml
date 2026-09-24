@@ -413,10 +413,60 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
 
 
-  # POST /carts/{id}/items
-  #   Ajouter un lancer au panier, avec un nombre de places.
-  #   L'écran de panier doit pouvoir se peindre à partir de cette seule
-  #   réponse, sans second appel. Le total est calculé par le serveur.
+  /carts/{id}/items:
+    post:
+      tags: [ Panier ]
+      operationId: addItemToCart
+      summary: Ajouter un lancer au panier.
+      description: |
+        Ajouter un lancer au panier, avec un nombre de places.
+        L'écran de panier peut se peindre à partir de cette seule
+        réponse, sans second appel. Le total est calculé par le serveur.
+      parameters:
+        - name: id
+          description: L'id du panier (uuid)
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemToCartRequest'
+      responses:
+        '200':
+          description: Lancer ajouté au panier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+              example:
+                id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                status: pending
+                content:
+                  - id: 9f8e7d6c-5b4a-3f2e-1d0c-9b8a7f6e5d4c
+                    trip:
+                      id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                      departureName: Dijon
+                      arrivalName: Paris
+                      departureTime: "2027-02-14T10:03:00Z"
+                      duration: 45
+                      price: 75
+                    passengers: 2
+                    price: 150
+                totalPrice: 150
+                createdDate: "2027-02-14T10:03:00Z"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+
 
   # DELETE /carts/{id}/items/{itemId}
   #   Retirer une ligne du panier. Si c'était la dernière, le panier disparaît
@@ -668,9 +718,11 @@ components:
         id:
           type: string
           format: uuid
+          description: Id de la ville.
           example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
         name:
           type: string
+          description: Nom de la ville.
           example: Dijon
 
     TripSearchRequest:
@@ -683,17 +735,21 @@ components:
         departureId:
           type: string
           format: uuid
+          description: Id de la ville de départ.
           example: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
         arrivalId:
           type: string
           format: uuid
+          description: Id de la ville d'arrivée.
           example: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a4c5d
         date:
           type: string
           format: date
+          description: Date de départ.
           example: '2027-02-14'
         passengers:
           type: integer
+          description: Nombre de passagers pour le lancer.
           minimum: 1
           example: 2
 
@@ -709,16 +765,20 @@ components:
         id:
           type: string
           format: uuid
+          description: Id du lancer.
           example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
         departureName:
           type: string
+          description: Nom de la ville de départ.
           example: Dijon
         arrivalName:
           type: string
+          description: Nom de la ville d'arrivée.
           example: Paris
         departureTime:
           type: string
           format: date-time
+          description: Date et heure de départ du lancer.
           example: '2027-02-14T10:03:00Z'
         duration:
           type: integer
@@ -746,9 +806,11 @@ components:
               example: 58.5
             catapultModel:
               type: string
+              description: Modèle de la catapulte utilisée pour le lancer.
               example: "Onagre M3"
             boardingInstruction:
               type: string
+              description: Consignes d'embarquement.
               example: "Présentez-vous à la catapulte municipale de Dijon vingt minutes avant l'heure du lancer."
 
     Cart:
@@ -762,21 +824,26 @@ components:
         id:
           type: string
           format: uuid
+          description: Id du panier
           example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
         status:
           type: string
           enum: [pending, paid]
+          description: Status du panier
           example: pending
         content:
           type: array
+          description: "Contenu du panier : les différents lancers"
           items:
             $ref: '#/components/schemas/CartItem'
         totalPrice:
           type: number
+          description: Prix total du panier.
           example: 0.00
         createdDate:
           type: string
           format: date-time
+          description: Date de création du panier.
           example: '2027-02-14T10:03:00Z'
 
     CartItem:
@@ -788,16 +855,36 @@ components:
         id:
           type: string
           format: uuid
+          description: Id de l'item du panier.
           example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
         trip:
           $ref: '#/components/schemas/TripSummary'
         passengers:
           type: integer
+          description: Nombre de passagers pour le lancer.
           minimum: 1
           example: 2
         price:
           type: number
+          description: Prix du lancer en prenant en compte le nombre de passagers.
           example: 12.00
+
+    AddItemToCartRequest:
+      type: object
+      description: |
+        Ajout d'un lancer à un panier.
+      required: [ tripId, passengers ]
+      properties:
+        tripId:
+          type: string
+          format: uuid
+          description: ID du lancer.
+          example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        passengers:
+          type: integer
+          minimum: 1
+          description: Nombre de passagers.
+          example: 2
 
     # Ticket
     #   Un droit à embarquer sur un lancer, émis au paiement. Un par place.
