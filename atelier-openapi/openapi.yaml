@@ -358,7 +358,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/Cart'
+                $ref: '#/components/schemas/Cart'
               example:
                 id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
                 status: pending
@@ -376,13 +376,42 @@ paths:
                 type: 'https://api.catapulte-connect.ontb.example/errors/active-cart-exists'
                 title: Panier déjà actif
                 status: 409
-                detail: Un panier actif existe déjà. Un utilisateur ne peut posséder q'un seul panier.
+                detail: Un panier actif existe déjà. Un utilisateur ne peut posséder qu'un seul panier.
+    get:
+      tags: [ Panier ]
+      operationId: getCart
+      summary: Récupérer le panier actif de l'utilisateur
+      description: |
+        Récupérer le panier actif du voyageur connecté. Un voyageur n'a qu'un
+        panier actif à la fois — et parfois aucun, ce qui est un état normal
+        et non une erreur.
+      responses:
+        '200':
+          description: Détail du panier actif de l'utilisateur.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cart'
+              example:
+                - id: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+                  status: pending
+                  content:
+                    - id: 9f8e7d6c-5b4a-3f2e-1d0c-9b8a7f6e5d4c
+                      trip:
+                        id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                        departureName: Dijon
+                        arrivalName: Paris
+                        departureTime: "2027-02-14T10:03:00Z"
+                        duration: 45
+                        price: 75
+                      passengers: 2
+                      price: 150
+                  totalPrice: 150
+                  createdDate: "2027-02-14T10:03:00Z"
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
-
-  # GET /carts
-  #   Récupérer le panier actif du voyageur connecté. Un voyageur n'a qu'un
-  #   panier actif à la fois — et parfois aucun, ce qui est un état normal
-  #   et non une erreur. Réfléchissez à ce que ça implique pour la réponse.
 
   # POST /carts/{id}/items
   #   Ajouter un lancer au panier, avec un nombre de places.
